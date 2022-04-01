@@ -240,6 +240,7 @@ struct perturbations
   short has_source_delta_idm;  /**< do we need source for delta of interacting dark matter */
   short has_source_delta_idr;  /**< do we need source for delta of interacting dark radiation? */
   short has_source_delta_dcdm; /**< do we need source for delta of DCDM? */
+  short has_source_delta_kin;  /**< do we need source for delta of kination? */ //Akshay Edit
   short has_source_delta_fld;  /**< do we need source for delta of dark energy? */
   short has_source_delta_scf;  /**< do we need source for delta from scalar field? */
   short has_source_delta_dr;   /**< do we need source for delta of decay radiation? */
@@ -254,6 +255,7 @@ struct perturbations
   short has_source_theta_idm;  /**< do we need source for theta of interacting dark matter */
   short has_source_theta_idr;  /**< do we need source for theta of interacting dark radiation? */
   short has_source_theta_dcdm; /**< do we need source for theta of DCDM? */
+  short has_source_theta_kin;  /**< do we need source for theta of kination? */ //Akshay Edit
   short has_source_theta_fld;  /**< do we need source for theta of dark energy? */
   short has_source_theta_scf;  /**< do we need source for theta of scalar field? */
   short has_source_theta_dr;   /**< do we need source for theta of ultra-relativistic neutrinos/relics? */
@@ -287,6 +289,7 @@ struct perturbations
   int index_tp_delta_cdm; /**< index value for delta of cold dark matter */
   int index_tp_delta_idm; /**< index value for delta of interacting dark matter */
   int index_tp_delta_dcdm;/**< index value for delta of DCDM */
+  int index_tp_delta_kin;  /**< index value for delta of kination */ //Akshay Edit
   int index_tp_delta_fld;  /**< index value for delta of dark energy */
   int index_tp_delta_scf;  /**< index value for delta of scalar field */
   int index_tp_delta_dr; /**< index value for delta of decay radiation */
@@ -303,6 +306,7 @@ struct perturbations
   int index_tp_theta_b;     /**< index value for theta of baryons */
   int index_tp_theta_cdm;   /**< index value for theta of cold dark matter */
   int index_tp_theta_dcdm;  /**< index value for theta of DCDM */
+  int index_tp_theta_kin;   /**< index value for theta of kination */ //Akshay Edit
   int index_tp_theta_fld;   /**< index value for theta of dark energy */
   int index_tp_theta_scf;   /**< index value for theta of scalar field */
   int index_tp_theta_ur;    /**< index value for theta of ultra-relativistic neutrinos/relics */
@@ -470,6 +474,8 @@ struct perturbations_vector
   int index_pt_theta_idm; /**< idm velocity */
   int index_pt_delta_dcdm; /**< dcdm density */
   int index_pt_theta_dcdm; /**< dcdm velocity */
+  int index_pt_delta_kin;  /**< kination density in true fluid case */
+  int index_pt_theta_kin;  /**< kination velocity in true fluid case */
   int index_pt_delta_fld;  /**< dark energy density in true fluid case */
   int index_pt_theta_fld;  /**< dark energy velocity in true fluid case */
   int index_pt_Gamma_fld;  /**< unique dark energy dynamical variable in PPF case */
@@ -595,6 +601,11 @@ struct perturbations_workspace
 
   double delta_cb;       /**< relative density perturbation of only cdm and baryon */
   double theta_cb;       /**< velocity divergence theta of only cdm and baryon */
+
+//Akshay Edit
+  double delta_rho_kin;        /**< density perturbation of kination fluid */
+  double delta_p_kin;          /**< pressure perturbation of kination fluid */
+  double rho_plus_p_theta_kin; /**< velocity divergence of kination fluid */
 
   double delta_rho_fld;        /**< density perturbation of fluid, not so trivial in PPF scheme */
   double delta_p_fld;          /**< pressure perturbation of fluid, very non-trivial in PPF scheme */
