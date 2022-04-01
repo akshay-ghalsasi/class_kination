@@ -104,6 +104,9 @@ struct background
 
   double Omega0_k;         /**< \f$ \Omega_{0_k} \f$: curvature contribution */
 
+  double Omega0_kin;    /**< \f$ \Omega_{0_\kin} \f$: Kination */ //Akshay Edit
+  double a_MK;          /**< \f$ \Omega_{0_\kin} \f$: Switch between matter and Kination */ //Akshay Edit
+
   double Omega0_lambda;    /**< \f$ \Omega_{0_\Lambda} \f$: cosmological constant */
   double Omega0_fld;       /**< \f$ \Omega_{0 de} \f$: fluid */
   double Omega0_scf;       /**< \f$ \Omega_{0 scf} \f$: scalar field */

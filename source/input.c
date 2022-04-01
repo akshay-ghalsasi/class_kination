@@ -3124,7 +3124,17 @@ int input_read_parameters_species(struct file_content * pfc,
   if ((ppt->gauge == synchronous) && (pba->Omega0_cdm < ppr->Omega0_cdm_min_synchronous)) {
     pba->Omega0_cdm = ppr->Omega0_cdm_min_synchronous;
   }
-
+// Kination Species -- Akshay Edit
+class_call(parser_read_double(pfc,"Omega_kin",&param1,&flag1,errmsg),
+             errmsg,
+             errmsg);
+class_call(parser_read_double(pfc,"aMK",&param2,&flag2,errmsg),
+             errmsg,
+             errmsg);
+if (flag1 == _TRUE_ && flag2 == _TRUE_){
+    pba->Omega0_kin = param1;
+    pba->a_MK = param2;
+  }
   /* At this point all the species should be set, and used for the budget equation below */
 
   /** 8) Dark energy
@@ -3166,6 +3176,7 @@ int input_read_parameters_species(struct file_content * pfc,
   Omega_tot += pba->Omega0_dcdmdr;
   Omega_tot += pba->Omega0_idr;
   Omega_tot += pba->Omega0_ncdm_tot;
+  Omega_tot += pba->Omega0_kin;//Akshay Edit
   /* Step 1 */
   if (flag1 == _TRUE_){
     pba->Omega0_lambda = param1;
@@ -5762,11 +5773,12 @@ int input_default_params(struct background *pba,
   ppt->has_idm_soundspeed = _FALSE_;
 
   /* ** ADDITIONAL SPECIES ** */
-
+  /** 10) Kination Contribution **/
+  pba->Omega0_kin = 0.;
   /** 9) Dark energy contributions */
   pba->Omega0_fld = 0.;
   pba->Omega0_scf = 0.;
-  pba->Omega0_lambda = 1.-pba->Omega0_k-pba->Omega0_g-pba->Omega0_ur-pba->Omega0_b-pba->Omega0_cdm-pba->Omega0_ncdm_tot-pba->Omega0_dcdmdr - pba->Omega0_idr -pba->Omega0_idm;
+  pba->Omega0_lambda = 1.-pba->Omega0_k-pba->Omega0_g-pba->Omega0_ur-pba->Omega0_b-pba->Omega0_cdm-pba->Omega0_ncdm_tot-pba->Omega0_dcdmdr - pba->Omega0_idr -pba->Omega0_idm-pba->Omega0_kin;
   /** 8.a) Omega fluid */
   /** 8.a.1) PPF approximation */
   pba->use_ppf = _TRUE_;
