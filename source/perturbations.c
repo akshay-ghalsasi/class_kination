@@ -467,8 +467,7 @@ int perturbations_output_data(
           class_store_double(dataptr,tk[ppt->index_tp_delta_b],ppt->has_source_delta_b,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_delta_cdm],ppt->has_source_delta_cdm,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_delta_idm],ppt->has_source_delta_idm,storeidx);
-          class_store_double(dataptr,tk[ppt->index_tp_delta_kin,ppt->has_source_delta_kin,storeidx);
-
+          class_store_double(dataptr,tk[ppt->index_tp_delta_kin],ppt->has_source_delta_kin,storeidx);//Akshay Edit
           class_store_double(dataptr,tk[ppt->index_tp_delta_fld],ppt->has_source_delta_fld,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_delta_ur],ppt->has_source_delta_ur,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_delta_idr],ppt->has_source_delta_idr,storeidx);
@@ -498,6 +497,7 @@ int perturbations_output_data(
           class_store_double(dataptr,tk[ppt->index_tp_theta_b],ppt->has_source_theta_b,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_theta_cdm],ppt->has_source_theta_cdm,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_theta_idm],ppt->has_source_theta_idm,storeidx);
+          class_store_double(dataptr,tk[ppt->index_tp_theta_kin],ppt->has_source_theta_kin,storeidx);//Akshay Edit
           class_store_double(dataptr,tk[ppt->index_tp_theta_fld],ppt->has_source_theta_fld,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_theta_ur],ppt->has_source_theta_ur,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_theta_idr],ppt->has_source_theta_idr,storeidx);
@@ -557,6 +557,7 @@ int perturbations_output_titles(
       class_store_columntitle(titles,"d_b",_TRUE_);
       class_store_columntitle(titles,"d_cdm",pba->has_cdm);
       class_store_columntitle(titles,"d_idm",pba->has_idm);
+      class_store_columntitle(titles,"d_kin",pba->has_kin);//Akshay Edit
       class_store_columntitle(titles,"d_fld",pba->has_fld);
       class_store_columntitle(titles,"d_ur",pba->has_ur);
       class_store_columntitle(titles,"d_idr",pba->has_idr);
@@ -586,6 +587,7 @@ int perturbations_output_titles(
       class_store_columntitle(titles,"t_b",_TRUE_);
       class_store_columntitle(titles,"t_cdm",((pba->has_cdm == _TRUE_) && (ppt->gauge != synchronous)));
       class_store_columntitle(titles,"t_idm",pba->has_idm);
+      class_store_columntitle(titles,"t_kin",pba->has_kin);//Akshay Edit
       class_store_columntitle(titles,"t_fld",pba->has_fld);
       class_store_columntitle(titles,"t_ur",pba->has_ur);
       class_store_columntitle(titles,"t_idr",pba->has_idr);
@@ -711,6 +713,7 @@ int perturbations_init(
   /* pointer to one struct perturbations_workspace per thread (one if no openmp) */
   struct perturbations_workspace ** pppw;
   /* background quantities */
+  double w_kin, dw_over_da_kin,integral_kin; //Akshay Edit
   double w_fld_ini, w_fld_0,dw_over_da_fld,integral_fld;
   /* number of threads (always one if no openmp) */
   int number_of_threads=1;
@@ -787,7 +790,8 @@ int perturbations_init(
     }
 
   }
-
+//Askhay Edit. This test at the moment is not necessary for kin. Can be added later if needed
+//Current plan is to change the ic for kin dominated universe so following tst not needed for kin.
   if (pba->has_fld == _TRUE_) {
 
     /* check values of w_fld at initial time and today. Since 'a' in the code stands for 'a/a_0', its current value is 1 by definition */
@@ -1295,6 +1299,7 @@ int perturbations_indices(
   ppt->has_source_delta_cdm = _FALSE_;
   ppt->has_source_delta_idm = _FALSE_;
   ppt->has_source_delta_dcdm = _FALSE_;
+  ppt->has_source_delta_kin = _FALSE_;//Akshay Edit
   ppt->has_source_delta_fld = _FALSE_;
   ppt->has_source_delta_scf = _FALSE_;
   ppt->has_source_delta_dr = _FALSE_;
@@ -1310,6 +1315,7 @@ int perturbations_indices(
   ppt->has_source_theta_cdm = _FALSE_;
   ppt->has_source_theta_idm = _FALSE_;
   ppt->has_source_theta_dcdm = _FALSE_;
+  ppt->has_source_theta_kin = _FALSE_;//Akshay Edit
   ppt->has_source_theta_fld = _FALSE_;
   ppt->has_source_theta_scf = _FALSE_;
   ppt->has_source_theta_dr = _FALSE_;
@@ -1402,6 +1408,8 @@ int perturbations_indices(
           ppt->has_source_delta_idm = _TRUE_;
         if (pba->has_dcdm == _TRUE_)
           ppt->has_source_delta_dcdm = _TRUE_;
+        if (pba->has_kin == _TRUE_)
+          ppt->has_source_delta_kin = _TRUE_;//Akshay Edit
         if (pba->has_fld == _TRUE_)
           ppt->has_source_delta_fld = _TRUE_;
         if (pba->has_scf == _TRUE_)
@@ -1433,6 +1441,8 @@ int perturbations_indices(
           ppt->has_source_theta_idm = _TRUE_;
         if (pba->has_dcdm == _TRUE_)
           ppt->has_source_theta_dcdm = _TRUE_;
+        if (pba->has_kin == _TRUE_)
+          ppt->has_source_theta_kin = _TRUE_;//Akshay Edit
         if (pba->has_fld == _TRUE_)
           ppt->has_source_theta_fld = _TRUE_;
         if (pba->has_scf == _TRUE_)
@@ -1509,6 +1519,7 @@ int perturbations_indices(
       class_define_index(ppt->index_tp_delta_cdm,  ppt->has_source_delta_cdm, index_type,1);
       class_define_index(ppt->index_tp_delta_idm,  ppt->has_source_delta_idm, index_type,1);
       class_define_index(ppt->index_tp_delta_dcdm, ppt->has_source_delta_dcdm,index_type,1);
+      class_define_index(ppt->index_tp_delta_kin,  ppt->has_source_delta_kin, index_type,1);//Akshay Edit
       class_define_index(ppt->index_tp_delta_fld,  ppt->has_source_delta_fld, index_type,1);
       class_define_index(ppt->index_tp_delta_scf,  ppt->has_source_delta_scf, index_type,1);
       class_define_index(ppt->index_tp_delta_dr,   ppt->has_source_delta_dr,  index_type,1);
@@ -1523,6 +1534,7 @@ int perturbations_indices(
       class_define_index(ppt->index_tp_theta_cdm,  ppt->has_source_theta_cdm, index_type,1);
       class_define_index(ppt->index_tp_theta_idm,  ppt->has_source_theta_idm, index_type,1);
       class_define_index(ppt->index_tp_theta_dcdm, ppt->has_source_theta_dcdm,index_type,1);
+      class_define_index(ppt->index_tp_theta_kin,  ppt->has_source_theta_kin, index_type,1);//Akshay Edit
       class_define_index(ppt->index_tp_theta_fld,  ppt->has_source_theta_fld, index_type,1);
       class_define_index(ppt->index_tp_theta_scf,  ppt->has_source_theta_scf, index_type,1);
       class_define_index(ppt->index_tp_theta_dr,   ppt->has_source_theta_dr,  index_type,1);
@@ -3449,6 +3461,10 @@ int perturbations_prepare_k_output(struct background * pba,
       /* Scalar field scf */
       class_store_columntitle(ppt->scalar_titles, "delta_scf", pba->has_scf);
       class_store_columntitle(ppt->scalar_titles, "theta_scf", pba->has_scf);
+      /** Kination */ //Akshay Edit
+      class_store_columntitle(ppt->scalar_titles, "delta_rho_kin", pba->has_kin);
+      class_store_columntitle(ppt->scalar_titles, "rho_plus_p_theta_kin", pba->has_kin);
+      class_store_columntitle(ppt->scalar_titles, "delta_p_kin", pba->has_kin);
       /** Fluid */
       class_store_columntitle(ppt->scalar_titles, "delta_rho_fld", pba->has_fld);
       class_store_columntitle(ppt->scalar_titles, "rho_plus_p_theta_fld", pba->has_fld);
@@ -4027,6 +4043,12 @@ int perturbations_vector_init(
       ppv->l_max_dr = ppr->l_max_dr;
       class_define_index(ppv->index_pt_F0_dr,_TRUE_,index_pt,ppv->l_max_dr+1); /* all momenta in Boltzmann hierarchy  */
     }
+    
+    /*Kination*/ //Akshay Edit
+    
+    class_define_index(ppv->index_pt_delta_kin,pba->has_kin,index_pt,1); /* kination density */
+    class_define_index(ppv->index_pt_theta_kin,pba->has_kin,index_pt,1); /* kination velocity */
+    
 
     /* fluid */
 
@@ -4491,7 +4513,15 @@ int perturbations_vector_init(
           ppv->y[ppv->index_pt_F0_dr+l] =
             ppw->pv->y[ppw->pv->index_pt_F0_dr+l];
       }
+      // Kination Akshay Edit 
+      if (pba->has_kin == _TRUE_) {
+        ppv->y[ppv->index_pt_delta_kin] =
+          ppw->pv->y[ppw->pv->index_pt_delta_kin];
 
+        ppv->y[ppv->index_pt_theta_kin] =
+          ppw->pv->y[ppw->pv->index_pt_theta_kin];
+      }
+      
       if (pba->has_fld == _TRUE_) {
 
         if (pba->use_ppf == _FALSE_) {
@@ -5371,12 +5401,14 @@ int perturbations_initial_conditions(struct precision * ppr,
   /** --> Declare local variables */
 
   double a,a_prime_over_a;
+  //Akshay Edit
+  double w_kin,dw_over_da_kin,integral_kin;
   double w_fld,dw_over_da_fld,integral_fld;
   double delta_ur=0.,theta_ur=0.,shear_ur=0.,l3_ur=0.,eta=0.,delta_cdm=0.,alpha, alpha_prime;
   double delta_dr=0;
   double q,epsilon,k2;
   int index_q,n_ncdm,idx;
-  double rho_r,rho_m,rho_nu,rho_m_over_rho_r, rho_cdm =0.;
+  double rho_r,rho_m,rho_nu,rho_m_over_rho_r,rho_kin_over_rho_r, rho_cdm =0.;
   double fracnu,fracg,fracb,fraccdm = 0.,fracidm = 0.;
   double om;
   double ktau_two,ktau_three;
@@ -5475,6 +5507,11 @@ int perturbations_initial_conditions(struct precision * ppr,
     /* Omega_m(t_i) / Omega_r(t_i) */
     rho_m_over_rho_r = rho_m/rho_r;
 
+    /*Kination Domination*/
+    //Akshay Edit 
+    if (pba->has_kin == _TRUE_){
+      rho_kin_over_rho_r = ppw->pvecback[pba->index_bg_rho_b]/rho_r;
+    }
     /* omega = Omega_m(t_i) a(t_i) H(t_i) / sqrt(Omega_r(t_i))
        = Omega_m(t_0) a(t_0) H(t_0) / sqrt(Omega_r(t_0)) assuming rho_m in a-3 and rho_r in a^-4
        = (8piG/3 rho_m(t_i)) a(t_i) / sqrt(8piG/3 rho_r(t_i))  in Mpc-1
@@ -5544,6 +5581,15 @@ int perturbations_initial_conditions(struct precision * ppr,
         ppw->pv->y[ppw->pv->index_pt_delta_dcdm] = 3./4.*ppw->pv->y[ppw->pv->index_pt_delta_g]; /* dcdm density */
         /* dcdm velocity velocity vanishes initially in the synchronous gauge */
 
+      }
+
+      /* Kination */ //Akshay Edit
+      // No need for cs2_kin for now. NEED TO REDERIVE IC TO MAKE SURE THEY ARE CORRECT
+      if (pba->has_kin == _TRUE_) {
+
+      class_call(background_w_kin(pba,a,&w_kin,&dw_over_da_kin,&integral_kin), pba->error_message, ppt->error_message);
+      ppw->pv->y[ppw->pv->index_pt_delta_kin] = - ktau_two/4.*(1.+w_kin)*(4)/(4.-6.*w_kin) * ppr->curvature_ini * s2_squared; 
+      ppw->pv->y[ppw->pv->index_pt_theta_kin] = - k*ktau_three/4./(4.-6.*w_kin) * ppr->curvature_ini * s2_squared; 
       }
 
       /* fluid (assumes wa=0, if this is not the case the
@@ -5799,10 +5845,20 @@ int perturbations_initial_conditions(struct precision * ppr,
 
       velocity_tot = ((4./3.)*(fracg*ppw->pv->y[ppw->pv->index_pt_theta_g]+fracnu*theta_ur) + rho_m_over_rho_r*fracb*ppw->pv->y[ppw->pv->index_pt_theta_b])/(1.+rho_m_over_rho_r);
 
+      //Akshay Edit. If Kination Fluid is dominant then need to modify bellow to get correct delta_tot, v_tot
+      //NEEDS TO BE VERIFIED
+      if (pba->has_kin == _TRUE_ ) {
+        delta_tot = (fracg*ppw->pv->y[ppw->pv->index_pt_delta_g]+fracnu*delta_ur+rho_m_over_rho_r*(fracb*ppw->pv->y[ppw->pv->index_pt_delta_b]+fraccdm*delta_cdm)+rho_kin_over_rho_r*ppw->pv->y[ppw->pv->index_pt_delta_kin])/(1.+rho_m_over_rho_r+rho_kin_over_rho_r);
+        class_call(background_w_kin(pba,a,&w_kin,&dw_over_da_kin,&integral_kin), pba->error_message, ppt->error_message);
+        velocity_tot = ((4./3.)*(fracg*ppw->pv->y[ppw->pv->index_pt_theta_g]+fracnu*theta_ur) + rho_m_over_rho_r*fracb*ppw->pv->y[ppw->pv->index_pt_theta_b]+ (1+w_kin)*rho_kin_over_rho_r*ppw->pv->y[ppw->pv->index_pt_theta_kin])/(1.+rho_m_over_rho_r+rho_kin_over_rho_r);
+
+      }
+
       if (ppt->has_idm_dr == _TRUE_ ) {
         delta_tot += rho_m_over_rho_r*fracidm*ppw->pv->y[ppw->pv->index_pt_delta_idm]/(1.+rho_m_over_rho_r);
         velocity_tot += rho_m_over_rho_r*fracidm*ppw->pv->y[ppw->pv->index_pt_theta_idm]/(1.+rho_m_over_rho_r);
       }
+      
 
       alpha = (eta + 3./2.*a_prime_over_a*a_prime_over_a/k/k/s2_squared*(delta_tot + 3.*a_prime_over_a/k/k*velocity_tot))/a_prime_over_a;
 
@@ -5827,6 +5883,15 @@ int perturbations_initial_conditions(struct precision * ppr,
       if (pba->has_dcdm == _TRUE_) {
         ppw->pv->y[ppw->pv->index_pt_delta_dcdm] -= (3.*a_prime_over_a + a*pba->Gamma_dcdm)*alpha;
         ppw->pv->y[ppw->pv->index_pt_theta_dcdm] = k*k*alpha;
+      }
+
+      /* Kination */ //Akshay Edit
+      if (pba->has_kin == _TRUE_) {
+
+        class_call(background_w_kin(pba,a,&w_kin,&dw_over_da_kin,&integral_kin), pba->error_message, ppt->error_message);
+
+        ppw->pv->y[ppw->pv->index_pt_delta_kin] -= 3*(1.+w_kin)*a_prime_over_a*alpha;
+        ppw->pv->y[ppw->pv->index_pt_theta_kin] += k*k*alpha;
       }
 
       /* fluid */
@@ -6807,6 +6872,8 @@ int perturbations_total_stress_energy(
   double rho_plus_p_ncdm;
   int index_q,n_ncdm,idx;
   double epsilon,q,q2,cg2_ncdm,w_ncdm,rho_ncdm_bg,p_ncdm_bg,pseudo_p_ncdm;
+  double w_kin,dw_over_da_kin,integral_kin; //Akshay Edit
+  double w_prime_kin, ca2_kin; //Akshay Edit
   double w_fld,dw_over_da_fld,integral_fld;
   double gwncdm;
   double rho_relativistic;
@@ -7195,6 +7262,27 @@ int perturbations_total_stress_energy(
     }
 
     /* add your extra species here */
+    /*Kination Contribution*/ //Akshay Edit
+    //NEED TO CHECK. GOT RID OF cs2_kin since unsure of the definition at the moment
+    if (pba->has_kin == _TRUE_) {
+
+      class_call(background_w_kin(pba,a,&w_kin,&dw_over_da_kin,&integral_kin), pba->error_message, ppt->error_message);
+      w_prime_kin = dw_over_da_kin * a_prime_over_a * a;
+
+     
+      ppw->delta_rho_kin = ppw->pvecback[pba->index_bg_rho_kin]*y[ppw->pv->index_pt_delta_kin];
+      ppw->rho_plus_p_theta_kin = (1.+w_kin)*ppw->pvecback[pba->index_bg_rho_kin]*y[ppw->pv->index_pt_theta_kin];
+      ca2_kin = w_kin - w_prime_kin / 3. / (1.+w_kin) / a_prime_over_a;
+        /** We must gauge transform the pressure perturbation from the fluid rest-frame to the gauge we are working in */
+      ppw->delta_p_kin = (-ca2_kin)*(3*a_prime_over_a*ppw->rho_plus_p_theta_kin/k/k);
+
+      ppw->delta_rho += ppw->delta_rho_kin;
+      ppw->rho_plus_p_theta += ppw->rho_plus_p_theta_kin;
+      ppw->delta_p += ppw->delta_p_kin;
+
+      ppw->rho_plus_p_tot += (1.+w_kin)*ppw->pvecback[pba->index_bg_rho_kin];
+    }
+
 
     /* fluid contribution */
     if (pba->has_fld == _TRUE_) {
@@ -7475,6 +7563,9 @@ int perturbations_sources(
   double delta_g, delta_rho_scf, rho_plus_p_theta_scf;
   double a_prime_over_a=0.;  /* (a'/a) */
   double a_prime_over_a_prime=0.;  /* (a'/a)' */
+
+  double w_kin,dw_over_da_kin,integral_kin; //Akshay Edit
+
   double w_fld,dw_over_da_fld,integral_fld;
   int switch_isw = 1;
 
@@ -7874,6 +7965,13 @@ int perturbations_sources(
         + (3.*a_prime_over_a+a*pba->Gamma_dcdm)*theta_over_k2; // N-body gauge correction;
     }
 
+    /* delta_kin */ //Akshay Edit
+    //NEED TO CHECK IF THIS IS CORRECT ESPECIALLY THE GAUGE CORRECTION PART. make sure theta_over_k2 does not assume kination to be subdominant
+    if (ppt->has_source_delta_kin == _TRUE_) {
+      _set_source_(ppt->index_tp_delta_kin) = ppw->delta_rho_kin/pvecback[pba->index_bg_rho_kin]
+        + 3.*a_prime_over_a*(1.+pvecback[pba->index_bg_w_kin])*theta_over_k2; // N-body gauge correction
+    }
+
     /* delta_fld */
     if (ppt->has_source_delta_fld == _TRUE_) {
       _set_source_(ppt->index_tp_delta_fld) = ppw->delta_rho_fld/pvecback[pba->index_bg_rho_fld]
@@ -7987,6 +8085,15 @@ int perturbations_sources(
     /* theta_dcdm */
     if (ppt->has_source_theta_dcdm == _TRUE_) {
       _set_source_(ppt->index_tp_theta_dcdm) = y[ppw->pv->index_pt_theta_dcdm]
+        + theta_shift; // N-body gauge correction
+    }
+    /* theta_kin */ //Akshay Edit
+    //NEED TO CHECK IF THIS IS CORRECT ESPECIALLY THE GAUGE CORRECTION PART. make sure theta_shift does not assume kination to be subdominant
+    if (ppt->has_source_theta_kin == _TRUE_) {
+
+      class_call(background_w_kin(pba,a,&w_kin,&dw_over_da_kin,&integral_kin), pba->error_message, ppt->error_message);
+
+      _set_source_(ppt->index_tp_theta_kin) = ppw->rho_plus_p_theta_kin/(1.+w_kin)/pvecback[pba->index_bg_rho_kin]
         + theta_shift; // N-body gauge correction
     }
 
@@ -8558,6 +8665,12 @@ int perturbations_print_variables(double tau,
     /* Scalar field scf*/
     class_store_double(dataptr, delta_scf, pba->has_scf, storeidx);
     class_store_double(dataptr, theta_scf, pba->has_scf, storeidx);
+
+    /** Kination */ //Akshay Edit
+    class_store_double(dataptr, ppw->delta_rho_kin, pba->has_kin, storeidx);
+    class_store_double(dataptr, ppw->rho_plus_p_theta_kin, pba->has_kin, storeidx);
+    class_store_double(dataptr, ppw->delta_p_kin, pba->has_kin, storeidx);
+
     /** Fluid */
     class_store_double(dataptr, ppw->delta_rho_fld, pba->has_fld, storeidx);
     class_store_double(dataptr, ppw->rho_plus_p_theta_fld, pba->has_fld, storeidx);
@@ -8768,6 +8881,10 @@ int perturbations_derivs(double tau,
 
   /* Non-metric source terms for photons, i.e. \mathcal{P}^{(m)} from arXiv:1305.3261  */
   double P0,P1,P2;
+
+/* for use with kin): */ //Akshay Edit
+  double w_kin,dw_over_da_kin,w_prime_kin,integral_kin;
+
 
   /* for use with fluid (fld): */
   double w_fld,dw_over_da_fld,w_prime_fld,integral_fld;
@@ -9352,6 +9469,37 @@ int perturbations_derivs(double tau,
       dy[pv->index_pt_F0_dr+l] =
         k*(s_l[l]*y[pv->index_pt_F0_dr+l-1]-(1.+l)*cotKgen*y[pv->index_pt_F0_dr+l]);
 
+    }
+
+/** KINATION */ //Akshay Edit
+//THIS IS THE MAIN CHANGE. NEED TO CHECK. ESPECIALLY NEED TO REDERIVE  THE VELOCITY EQUATION
+
+    if (pba->has_kin == _TRUE_) {
+
+   
+
+        /** - ----> factors w, w_prime, adiabatic sound speed ca2 (all three background-related),
+            plus actual sound speed in the fluid rest frame cs2 */
+
+        class_call(background_w_kin(pba,a,&w_kin,&dw_over_da_kin,&integral_kin), pba->error_message, ppt->error_message);
+        w_prime_kin = dw_over_da_kin * a_prime_over_a * a;
+
+        ca2 = w_kin - w_prime_kin / 3. / (1.+w_kin) / a_prime_over_a;
+        
+
+        /** - ----> fluid density */
+
+        dy[pv->index_pt_delta_kin] =
+          -(1+w_kin)*(y[pv->index_pt_theta_kin]+metric_continuity)
+          -3.*(1-w_kin)*a_prime_over_a*y[pv->index_pt_delta_kin];
+
+        /** - ----> fluid velocity */
+        //REDERIVE. Replaced the cs2 as I expect it to be appropriate
+        dy[pv->index_pt_theta_kin] = /* fluid velocity */
+          -(1.-3.)*a_prime_over_a*y[pv->index_pt_theta_kin]
+          +k2/(1.+w_kin)*y[pv->index_pt_delta_kin]
+          +metric_euler;
+      
     }
 
     /** - ---> fluid (fld) */

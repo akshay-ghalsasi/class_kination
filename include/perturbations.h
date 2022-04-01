@@ -474,8 +474,8 @@ struct perturbations_vector
   int index_pt_theta_idm; /**< idm velocity */
   int index_pt_delta_dcdm; /**< dcdm density */
   int index_pt_theta_dcdm; /**< dcdm velocity */
-  int index_pt_delta_kin;  /**< kination density in true fluid case */
-  int index_pt_theta_kin;  /**< kination velocity in true fluid case */
+  int index_pt_delta_kin;  /**< kination density in true fluid case */ //Akshay Edit
+  int index_pt_theta_kin;  /**< kination velocity in true fluid case */ //Akshay Edit
   int index_pt_delta_fld;  /**< dark energy density in true fluid case */
   int index_pt_theta_fld;  /**< dark energy velocity in true fluid case */
   int index_pt_Gamma_fld;  /**< unique dark energy dynamical variable in PPF case */
