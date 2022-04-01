@@ -394,6 +394,8 @@ int background_functions(
   double rho_ncdm,p_ncdm,pseudo_p_ncdm;
   /* index for n_ncdm species */
   int n_ncdm;
+  /* kination time-dependent equation of state parameter */ //Akshay Edit
+  double w_kin, dw_over_da_kin, integral_kin;
   /* fluid's time-dependent equation of state parameter */
   double w_fld, dw_over_da, integral_fld;
   /* scalar field quantities */
@@ -536,6 +538,25 @@ int background_functions(
     p_tot -= pvecback[pba->index_bg_rho_lambda];
   }
 
+  /* kination with w(a)*/ //Akshay Edit
+  if (pba->has_kin == _TRUE_) {
+
+    /* get rho_kin from vector of integrated variables */
+    pvecback[pba->index_bg_rho_kin] = pvecback_B[pba->index_bi_rho_kin];
+
+    /* get w_kin from dedicated function */
+    class_call(background_w_kin(pba,a,&w_kin,&dw_over_da_kin,&integral_kin), pba->error_message, pba->error_message);
+    pvecback[pba->index_bg_w_kin] = w_kin;
+
+    // Obsolete: at the beginning, we had here the analytic integral solution corresponding to the case w=w0+w1(1-a/a0):
+    // pvecback[pba->index_bg_rho_kin] = pba->Omega0_kin * pow(pba->H0,2) / pow(a,3.*(1.+pba->w0_kin+pba->wa_kin)) * exp(3.*pba->wa_kin*(a-1.));
+    // But now everthing is integrated numerically for a given w_kin(a) defined in the function background_w_kin.
+
+    rho_tot += pvecback[pba->index_bg_rho_kin];
+    p_tot += w_kin * pvecback[pba->index_bg_rho_kin];
+    dp_dloga += (a*dw_over_da_kin-3*(1+w_kin)*w_kin)*pvecback[pba->index_bg_rho_kin];
+  }
+
   /* fluid with w(a) and constant cs2 */
   if (pba->has_fld == _TRUE_) {
 
@@ -646,6 +667,77 @@ int background_functions(
   return _SUCCESS_;
 
 }
+
+/**
+ * Single place where the kination equation of state is
+ * defined. Parameters of the function are passed through the
+ * background structure. Generalisation to arbitrary functions should
+ * be simple.
+ *
+ * @param pba            Input: pointer to background structure
+ * @param a              Input: current value of scale factor (in fact, with our conventions, of (a/a_0))
+ * @param w_kin          Output: equation of state parameter w_kin(a)
+ * @param dw_over_da_kin Output: function dw_kin/da
+ * @param integral_kin   Output: function \f$ \int_{a}^{a_0} da 3(1+w_{kin})/a \f$
+ * @return the error status
+ */ //Akshay Edit
+
+int background_w_kin(
+                     struct background * pba,
+                     double a,
+                     double * w_kin,
+                     double * dw_over_da_kin,
+                     double * integral_kin
+                     ) {
+
+  double Omega_ede = 0.;
+  double dOmega_ede_over_da = 0.;
+  double d2Omega_ede_over_da2 = 0.;
+  double a_eq, Omega_r, Omega_m;
+
+  /** - first, define the function w(a) */ //Akshay Edit
+  //First defining the theta function case. Generalizing to generic w(a) later
+  if (a < pba->a_MK){
+    *w_kin = 0; }
+  else{
+    *w_kin = 1; }
+  
+
+
+  /** - then, give the corresponding analytic derivative dw/da (used
+      by perturbation equations; we could compute it numerically,
+      but with a loss of precision; as long as there is a simple
+      analytic expression of the derivative of the previous
+      function, let's use it! */
+//Akshay Edit. Will define more cases later
+  
+  *dw_over_da_kin = 0;
+  
+
+  /** - finally, give the analytic solution of the following integral:
+      \f$ \int_{a}^{a0} da 3(1+w_{fld})/a \f$. This is used in only
+      one place, in the initial conditions for the background, and
+      with a=a_ini. If your w(a) does not lead to a simple analytic
+      solution of this integral, no worry: instead of writing
+      something here, the best would then be to leave it equal to
+      zero, and then in background_initial_conditions() you should
+      implement a numerical calculation of this integral only for
+      a=a_ini, using for instance Romberg integration. It should be
+      fast, simple, and accurate enough. */
+//Akshay Edit. Will define other cases later
+  if (a < pba->a_MK ){
+    *integral_kin = 3.*log((1.)/(a*(pba->a_MK)));}
+    else{
+    *integral_kin = 6.*log((1.)/a);}
+
+  /** note: of course you can generalise these formulas to anything,
+      defining new parameters pba->w..._fld. Just remember that so
+      far, HyRec explicitely assumes that w(a)= w0 + wa (1-a/a0); but
+      Recfast does not assume anything */
+
+  return _SUCCESS_;
+}
+
 
 /**
  * Single place where the fluid equation of state is
@@ -978,6 +1070,7 @@ int background_indices(
   pba->has_dr = _FALSE_;
   pba->has_scf = _FALSE_;
   pba->has_lambda = _FALSE_;
+  pba->has_kin = _FALSE_;
   pba->has_fld = _FALSE_;
   pba->has_ur = _FALSE_;
   pba->has_idr = _FALSE_;
@@ -1004,6 +1097,9 @@ int background_indices(
 
   if (pba->Omega0_lambda != 0.)
     pba->has_lambda = _TRUE_;
+  
+  if (pba->Omega0_kin != 0.)
+    pba->has_kin = _TRUE_;
 
   if (pba->Omega0_fld != 0.)
     pba->has_fld = _TRUE_;
@@ -1071,6 +1167,10 @@ int background_indices(
 
   /* - index for Lambda */
   class_define_index(pba->index_bg_rho_lambda,pba->has_lambda,index_bg,1);
+  
+  /* - index for kination*/ //Akshay Edit
+  class_define_index(pba->index_bg_rho_kin,pba->has_kin,index_bg,1);
+  class_define_index(pba->index_bg_w_kin,pba->has_kin,index_bg,1);
 
   /* - index for fluid */
   class_define_index(pba->index_bg_rho_fld,pba->has_fld,index_bg,1);
@@ -1158,6 +1258,8 @@ int background_indices(
   /* -> energy density in DR */
   class_define_index(pba->index_bi_rho_dr,pba->has_dr,index_bi,1);
 
+  /* -> energy density in kination */ //Akshay Edit
+  class_define_index(pba->index_bi_rho_kin,pba->has_kin,index_bi,1);
   /* -> energy density in fluid */
   class_define_index(pba->index_bi_rho_fld,pba->has_fld,index_bi,1);
 
@@ -1771,6 +1873,8 @@ int background_checks(
     pba->error_message,
     "Omegak = %g out of bounds (%g<Omegak<%g) \n",pba->Omega0_k,_OMEGAK_SMALL_,_OMEGAK_BIG_);*/
 
+//Akshay Edit.No corresponding check for Kination for the moment
+
   /* fluid equation of state */
   if (pba->has_fld == _TRUE_) {
 
@@ -2099,6 +2203,9 @@ int background_solve(
     pba->Omega0_nfsm += pba->Omega0_idm;
   if (pba->has_dcdm == _TRUE_)
     pba->Omega0_nfsm += pba->Omega0_dcdm;
+//Akshay Edit. Added for Kination. It should be very small anyway
+  if (pba->has_kin == _TRUE_)
+    pba->Omega0_nfsm += pba->Omega0_kin;
   for (n_ncdm=0;n_ncdm<pba->N_ncdm; n_ncdm++) {
     /* here we define non-free-streaming matter as: any non-relatistic species with a dimensionless ratio m/T bigger than a threshold ppr->M_nfsm_threshold; if this threshold is of the order of 10^4, this corresponds to the condition "becoming non-relativistic during radiation domination". Beware: this definition won't work in the case in which the user passes a customised p.s.d. for ncdm, such that M_ncdm is not defined.  */
     if (pba->M_ncdm[n_ncdm] > ppr->M_nfsm_threshold) {
@@ -2144,6 +2251,8 @@ int background_initial_conditions(
   double f,Omega_rad, rho_rad;
   int counter,is_early_enough,n_ncdm;
   double scf_lambda;
+  double rho_kin_today;
+  double w_kin,dw_over_da_kin,integral_kin;
   double rho_fld_today;
   double w_fld,dw_over_da_fld,integral_fld;
 
@@ -2232,6 +2341,25 @@ int background_initial_conditions(
       /** There is also a space reserved for a future case where dr is not sourced by dcdm */
       pvecback_integration[pba->index_bi_rho_dr] = 0.0;
     }
+  }
+//Akshay Edit
+  if (pba->has_kin == _TRUE_) {
+
+    /* rho_kin today */
+    rho_kin_today = pba->Omega0_kin * pow(pba->H0,2);
+
+    /* integrate rho_kin(a) from a_ini to a_0, to get rho_kin(a_ini) given rho_kin(a0) */
+    class_call(background_w_kin(pba,a,&w_kin,&dw_over_da_kin,&integral_kin), pba->error_message, pba->error_message);
+
+    /* Note: for complicated w_kin(a) functions with no simple
+       analytic integral, this is the place were you should compute
+       numerically the simple 1d integral [int_{a_ini}^{a_0} 3
+       [(1+w_kin)/a] da] (e.g. with the Romberg method?) instead of
+       calling background_w_kin */
+    //Akshay Edit will numerically integrate complicated w(a) later
+    /* rho_kin at initial time */
+    pvecback_integration[pba->index_bi_rho_kin] = rho_kin_today * exp(integral_kin);
+
   }
 
   if (pba->has_fld == _TRUE_) {
@@ -2447,6 +2575,10 @@ int background_output_titles(
     }
   }
   class_store_columntitle(titles,"(.)rho_lambda",pba->has_lambda);
+  //Akshay Edit
+  class_store_columntitle(titles,"(.)rho_kin",pba->has_kin);
+  class_store_columntitle(titles,"(.)w_kin",pba->has_kin);
+
   class_store_columntitle(titles,"(.)rho_fld",pba->has_fld);
   class_store_columntitle(titles,"(.)w_fld",pba->has_fld);
   class_store_columntitle(titles,"(.)rho_ur",pba->has_ur);
@@ -2520,6 +2652,11 @@ int background_output_data(
       }
     }
     class_store_double(dataptr,pvecback[pba->index_bg_rho_lambda],pba->has_lambda,storeidx);
+//Akshay Edit.
+    class_store_double(dataptr,pvecback[pba->index_bg_rho_kin],pba->has_kin,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_w_kin],pba->has_kin,storeidx);
+
+
     class_store_double(dataptr,pvecback[pba->index_bg_rho_fld],pba->has_fld,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_w_fld],pba->has_fld,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_ur],pba->has_ur,storeidx);
@@ -2644,6 +2781,12 @@ int background_derivs(
   if ((pba->has_dcdm == _TRUE_) && (pba->has_dr == _TRUE_)) {
     /** - Compute dr density \f$ d\rho/dloga = -4\rho - \Gamma/H \rho \f$ */
     dy[pba->index_bi_rho_dr] = -4.*y[pba->index_bi_rho_dr]+pba->Gamma_dcdm/H*y[pba->index_bi_rho_dcdm];
+  }
+
+//Akshay Edit
+  if (pba->has_kin == _TRUE_) {
+    /** - Compute kin density \f$ d\rho/dloga = -3 (1+w_{kin}(a)) \rho \f$ */
+    dy[pba->index_bi_rho_kin] = -3.*(1.+pvecback[pba->index_bg_w_kin])*y[pba->index_bi_rho_kin];
   }
 
   if (pba->has_fld == _TRUE_) {
@@ -2834,13 +2977,18 @@ int background_output_budget(
       class_print_species("Interacting Dark Radiation",idr);
       budget_radiation+=pba->Omega0_idr;
     }
-
-    if ((pba->has_lambda == _TRUE_) || (pba->has_fld == _TRUE_) || (pba->has_scf == _TRUE_) || (pba->has_curvature == _TRUE_)) {
+//Akshay Edit.
+    if ((pba->has_lambda == _TRUE_) || (pba->has_fld == _TRUE_) || (pba->has_scf == _TRUE_) || (pba->has_curvature == _TRUE_)||(pba->has_kin == _TRUE_)) {
       printf(" ---> Other Content \n");
     }
     if (pba->has_lambda == _TRUE_) {
       class_print_species("Cosmological Constant",lambda);
       budget_other+=pba->Omega0_lambda;
+    }
+    //Akshay Edit
+    if (pba->has_kin == _TRUE_) {
+      class_print_species("Kination",kin);
+      budget_other+=pba->Omega0_kin;
     }
     if (pba->has_fld == _TRUE_) {
       class_print_species("Dark Energy Fluid",fld);
@@ -2862,7 +3010,7 @@ int background_output_budget(
       printf(" - Non-Free-Streaming Matter      Omega = %-15g , omega = %-15g \n",pba->Omega0_nfsm,pba->Omega0_nfsm*pba->h*pba->h);
       printf(" - Non-Cold Dark Matter           Omega = %-15g , omega = %-15g \n",budget_neutrino,budget_neutrino*pba->h*pba->h);
     }
-    if ((pba->has_lambda == _TRUE_) || (pba->has_fld == _TRUE_) || (pba->has_scf == _TRUE_) || (pba->has_curvature == _TRUE_)) {
+    if ((pba->has_lambda == _TRUE_) || (pba->has_fld == _TRUE_) || (pba->has_scf == _TRUE_) || (pba->has_curvature == _TRUE_)||(pba->has_kin == _TRUE_)) {
       printf(" Other Content                    Omega = %-15g , omega = %-15g \n",budget_other,budget_other*pba->h*pba->h);
     }
     printf(" TOTAL                            Omega = %-15g , omega = %-15g \n",budget_radiation+budget_matter+budget_other,(budget_radiation+budget_matter+budget_other)*pba->h*pba->h);

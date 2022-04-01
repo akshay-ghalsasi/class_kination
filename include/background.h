@@ -173,6 +173,8 @@ struct background
   int index_bg_rho_cdm;       /**< cdm density */
   int index_bg_rho_idm;       /**< idm density */
   int index_bg_rho_lambda;    /**< cosmological constant density */
+  int index_bg_rho_kin;        /**< Kination density */ //Akshay Edit
+  int index_bg_w_kin;         /**< Kination equation of state */ //Akshay Edit
   int index_bg_rho_fld;       /**< fluid density */
   int index_bg_w_fld;         /**< fluid equation of state */
   int index_bg_rho_idr;       /**< density of interacting dark radiation */
@@ -261,6 +263,7 @@ struct background
 
   int index_bi_rho_dcdm;/**< {B} dcdm density */
   int index_bi_rho_dr;  /**< {B} dr density */
+  int index_bi_rho_kin; /**< {B} kination density */ //Akshay Edit
   int index_bi_rho_fld; /**< {B} fluid density */
   int index_bi_phi_scf;       /**< {B} scalar field value */
   int index_bi_phi_prime_scf; /**< {B} scalar field derivative wrt conformal time */
@@ -293,6 +296,7 @@ struct background
   short has_scf;       /**< presence of a scalar field? */
   short has_ncdm;      /**< presence of non-cold dark matter? */
   short has_lambda;    /**< presence of cosmological constant? */
+  short has_kin;       /**< presence of kination */ //Akshay Edit
   short has_fld;       /**< presence of fluid with constant w and cs2? */
   short has_ur;        /**< presence of ultra-relativistic neutrinos/relics? */
   short has_idr;       /**< presence of interacting dark radiation? */
@@ -418,7 +422,13 @@ extern "C" {
                            enum vecback_format return_format,
                            double * pvecback
                            );
-
+//Akshay Edit
+  int background_w_kin(
+                       struct background * pba,
+                       double a,
+                       double * w_kin,
+                       double * dw_over_da_kin,
+                       double * integral_kin);
   int background_w_fld(
                        struct background * pba,
                        double a,
