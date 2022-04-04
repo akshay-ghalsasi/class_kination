@@ -7274,7 +7274,8 @@ int perturbations_total_stress_energy(
       ppw->rho_plus_p_theta_kin = (1.+w_kin)*ppw->pvecback[pba->index_bg_rho_kin]*y[ppw->pv->index_pt_theta_kin];
       ca2_kin = w_kin - w_prime_kin / 3. / (1.+w_kin) / a_prime_over_a;
         /** We must gauge transform the pressure perturbation from the fluid rest-frame to the gauge we are working in */
-      ppw->delta_p_kin = (-ca2_kin)*(3*a_prime_over_a*ppw->rho_plus_p_theta_kin/k/k);
+        //Here the assumption is cs2_kin = 1. NEED TO CHECK!!!
+      ppw->delta_p_kin =  ppw->delta_rho_kin + (1.-ca2_kin)*(3*a_prime_over_a*ppw->rho_plus_p_theta_kin/k/k);
 
       ppw->delta_rho += ppw->delta_rho_kin;
       ppw->rho_plus_p_theta += ppw->rho_plus_p_theta_kin;
@@ -9491,12 +9492,12 @@ int perturbations_derivs(double tau,
 
         dy[pv->index_pt_delta_kin] =
           -(1+w_kin)*(y[pv->index_pt_theta_kin]+metric_continuity)
-          -3.*(1-w_kin)*a_prime_over_a*y[pv->index_pt_delta_kin];
+          -3.*(1-w_kin)*a_prime_over_a*y[pv->index_pt_delta_kin];// I think correct assuming delta_R = 0
 
         /** - ----> fluid velocity */
         //REDERIVE. Replaced the cs2 as I expect it to be appropriate
         dy[pv->index_pt_theta_kin] = /* fluid velocity */
-          -(1.-3.)*a_prime_over_a*y[pv->index_pt_theta_kin]
+          -(1.-3.*ca2)*a_prime_over_a*y[pv->index_pt_theta_kin]
           +k2/(1.+w_kin)*y[pv->index_pt_delta_kin]
           +metric_euler;
       
