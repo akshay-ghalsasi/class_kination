@@ -5588,8 +5588,12 @@ int perturbations_initial_conditions(struct precision * ppr,
       if (pba->has_kin == _TRUE_) {
 
       class_call(background_w_kin(pba,a,&w_kin,&dw_over_da_kin,&integral_kin), pba->error_message, ppt->error_message);
-      ppw->pv->y[ppw->pv->index_pt_delta_kin] = - ktau_two/4.*(1.+w_kin)*(4)/(4.-6.*w_kin) * ppr->curvature_ini * s2_squared; 
-      ppw->pv->y[ppw->pv->index_pt_theta_kin] = - k*ktau_three/4./(4.-6.*w_kin) * ppr->curvature_ini * s2_squared; 
+      /*ppw->pv->y[ppw->pv->index_pt_delta_kin] = - ktau_two/4.*(1.+w_kin)*(4)/(4.-6.*w_kin) * ppr->curvature_ini * s2_squared; 
+      ppw->pv->y[ppw->pv->index_pt_theta_kin] = - k*ktau_three/4./(4.-6.*w_kin) * ppr->curvature_ini * s2_squared; */
+      ppw->pv->y[ppw->pv->index_pt_delta_kin] = - (2*ktau_two/5.) * ppr->curvature_ini * s2_squared; 
+      ppw->pv->y[ppw->pv->index_pt_theta_kin] = - (k*ktau_three/10.) * ppr->curvature_ini * s2_squared;
+      printf("k = %5.e\n", k);
+      printf("ktau2 = %5.e\n", ktau_two);
       }
 
       /* fluid (assumes wa=0, if this is not the case the
@@ -6795,6 +6799,7 @@ int perturbations_einstein(
         ppw->theta_cb += ppw->pvecmetric[ppw->index_mt_alpha]*k2; //check gauge transformation
       }
     }
+    
   }
   /** - for vector modes */
 
@@ -7274,8 +7279,8 @@ int perturbations_total_stress_energy(
       ppw->rho_plus_p_theta_kin = (1.+w_kin)*ppw->pvecback[pba->index_bg_rho_kin]*y[ppw->pv->index_pt_theta_kin];
       ca2_kin = w_kin - w_prime_kin / 3. / (1.+w_kin) / a_prime_over_a;
         /** We must gauge transform the pressure perturbation from the fluid rest-frame to the gauge we are working in */
-        //Here the assumption is cs2_kin = 1. NEED TO CHECK!!!
-      ppw->delta_p_kin =  ppw->delta_rho_kin + (1.-ca2_kin)*(3*a_prime_over_a*ppw->rho_plus_p_theta_kin/k/k);
+        //Here the assumption is cs2_kin = 1. NEED TO CHECK!!! (Added missing (1+w_kin))
+      ppw->delta_p_kin =  ppw->delta_rho_kin + (1.-ca2_kin)*(1.+ w_kin)*(3*a_prime_over_a*ppw->rho_plus_p_theta_kin/k/k);
 
       ppw->delta_rho += ppw->delta_rho_kin;
       ppw->rho_plus_p_theta += ppw->rho_plus_p_theta_kin;
@@ -8545,7 +8550,8 @@ int perturbations_print_variables(double tau,
     }
 
     /* converting synchronous variables to newtonian ones */
-    if (ppt->gauge == synchronous) {
+    //Akshay Edit to keep the perturbations in synchronous gauge
+    /*if (ppt->gauge == synchronous)*/if (0 == 1) {
 
       /* density and velocity perturbations (comment out if you wish to keep synchronous variables) */
 
@@ -9495,11 +9501,12 @@ int perturbations_derivs(double tau,
           -3.*(1-w_kin)*a_prime_over_a*y[pv->index_pt_delta_kin];// I think correct assuming delta_R = 0
 
         /** - ----> fluid velocity */
+        //Akshay Edit
         //REDERIVE. Replaced the cs2 as I expect it to be appropriate
         dy[pv->index_pt_theta_kin] = /* fluid velocity */
           -(1.-3.*ca2)*a_prime_over_a*y[pv->index_pt_theta_kin]
           +k2/(1.+w_kin)*y[pv->index_pt_delta_kin]
-          +metric_euler;
+          +metric_euler; //I think correct assuming delta_R = 0
       
     }
 
